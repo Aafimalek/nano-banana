@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { MockupIcon, MascotIcon, RecipeIcon, TextImageIcon, DiagramIcon, StorybookIcon } from './icons';
 import { MockupGenerator } from './MockupGenerator';
 import { AssetGenerator } from './AssetGenerator';
@@ -6,8 +6,7 @@ import { RecipeGenerator } from './RecipeGenerator';
 import { TextImageGenerator } from './TextImageGenerator';
 import { DiagramGenerator } from './DiagramGenerator';
 import { StorybookCreator } from './StorybookCreator';
-
-type ToolId = 'mockup' | 'asset' | 'recipe' | 'textImage' | 'diagram' | 'storybook';
+import { ToolId } from '../types';
 
 interface Tool {
     id: ToolId;
@@ -17,17 +16,20 @@ interface Tool {
 }
 
 const toolsData: Tool[] = [
-    { id: 'mockup', label: 'Mockups', Icon: MockupIcon, description: 'Generate photorealistic mockups for your products.' },
-    { id: 'asset', label: 'Brand Assets', Icon: MascotIcon, description: 'Create consistent marketing assets with your mascot or product.' },
-    { id: 'recipe', label: 'Recipes', Icon: RecipeIcon, description: 'Craft illustrated, step-by-step recipes from a dish name or ingredients.' },
-    { id: 'textImage', label: 'Text Effects', Icon: TextImageIcon, description: 'Create stunning graphics with text seamlessly placed behind subjects.' },
-    { id: 'diagram', label: 'Diagrams', Icon: DiagramIcon, description: 'Generate clean, labeled educational diagrams on any topic.' },
-    { id: 'storybook', label: 'Storybooks', Icon: StorybookIcon, description: 'Create illustrated children\'s stories with consistent characters.' },
+    { id: 'mockup', label: 'Mockup Images', Icon: MockupIcon, description: 'Generate professional, photorealistic mockup images for your products in any scene you can imagine. Perfect for e-commerce and advertising.' },
+    { id: 'asset', label: 'Brand Marketing Images', Icon: MascotIcon, description: 'Create a suite of consistent, on-brand marketing images featuring your product or mascot for social media, ads, and websites.' },
+    { id: 'recipe', label: 'Recipe Images', Icon: RecipeIcon, description: 'Turn any dish name or list of ingredients into a complete, beautifully illustrated step-by-step recipe with images for each stage.' },
+    { id: 'textImage', label: 'Text Behind Images', Icon: TextImageIcon, description: 'Design striking graphics by seamlessly placing stylish text behind the main subject of any photo, creating a high-end, layered effect.' },
+    { id: 'diagram', label: 'Diagrams', Icon: DiagramIcon, description: 'Instantly generate clean, clear, and labeled educational diagrams on any topic, from complex scientific concepts to simple process flows.' },
+    { id: 'storybook', label: 'Storybook Images', Icon: StorybookIcon, description: 'Bring your stories to life by creating a series of charming, consistent illustrations for your children\'s book based on a character description.' },
 ];
 
+interface ToolSuiteProps {
+    activeTool: ToolId;
+    setActiveTool: (toolId: ToolId) => void;
+}
 
-export const ToolSuite: React.FC = () => {
-    const [activeTool, setActiveTool] = useState<ToolId>('mockup');
+export const ToolSuite: React.FC<ToolSuiteProps> = ({ activeTool, setActiveTool }) => {
     
     const renderActiveTool = () => {
         switch (activeTool) {
@@ -42,7 +44,7 @@ export const ToolSuite: React.FC = () => {
     }
 
     return (
-        <div className="w-full">
+        <div className="w-full" id="tool-suite">
             <header className="text-center mb-12 animate-fade-in">
                 <h2 className="text-4xl sm:text-5xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                     The Creator's Toolkit

@@ -1,29 +1,23 @@
-import { GoogleGenAI, GenerateContentResponse, Modality, Type } from "@google/genai";
-import { ImageFile, Recipe } from "../types";
+const { GoogleGenAI, Modality, Type } = require("@google/genai");
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.GEMINI_API_KEY;
 
 if (!API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
+    throw new Error("API_KEY environment variable is not set.");
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 // Utility to introduce a delay to respect API rate limits
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
-// Utility function to convert a File to a base64 string
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = (error) => reject(error);
-  });
+// Utility function to convert a buffer to a base64 string
+const bufferToBase64 = (buffer, mimeType) => {
+    return `data:${mimeType};base64,${buffer.toString('base64')}`;
 };
 
-const generatePromptForTextBackground = (backgroundPrompt: string): string => {
-  return `**CREATIVE DIRECTOR'S BRIEF: E-COMMERCE PRODUCT MOCKUP**
+const generatePromptForTextBackground = (backgroundPrompt) => {
+    return `**CREATIVE DIRECTOR'S BRIEF: E-COMMERCE PRODUCT MOCKUP**
   **PROJECT:** High-End Advertising Campaign
   **GOAL:** Create a single, breathtaking, photorealistic product mockup that tells a story and evokes a powerful brand emotion. The final image must be indistinguishable from a professional photograph shot on high-end equipment.
 
@@ -42,8 +36,8 @@ const generatePromptForTextBackground = (backgroundPrompt: string): string => {
   **FINAL DELIVERABLE:** A single, magazine-quality photograph that doesn't just show a product, but sells a lifestyle. Zero AI artifacts. Pure realism.`;
 };
 
-const generatePromptForImageBackground = (): string => {
-  return `**CREATIVE DIRECTOR'S BRIEF: PHOTOREALISTIC COMPOSITE**
+const generatePromptForImageBackground = () => {
+    return `**CREATIVE DIRECTOR'S BRIEF: PHOTOREALISTIC COMPOSITE**
   **PROJECT:** Seamless Visual Integration for Advertising
   **GOAL:** Flawlessly composite a provided subject image into a provided background image. The result must be a single, cohesive photograph that is completely believable and undetectable as a composite.
 
@@ -60,7 +54,7 @@ const generatePromptForImageBackground = (): string => {
   **FINAL DELIVERABLE:** A single, high-resolution photograph that withstands professional scrutiny. The composite must feel completely real.`;
 };
 
-const generateAssetPromptFromText = (mascotDescription: string, assetType: string): string => {
+const generateAssetPromptFromText = (mascotDescription, assetType) => {
     return `**CREATIVE DIRECTOR'S BRIEF: BRAND MASCOT ASSET SUITE**
   **PROJECT:** Launch Campaign for a New Brand Mascot
   **GOAL:** Generate a set of visually consistent, high-energy, and emotionally engaging marketing assets featuring a new brand mascot. Consistency is the most important metric of success.
@@ -80,7 +74,7 @@ const generateAssetPromptFromText = (mascotDescription: string, assetType: strin
   **FINAL DELIVERABLE:** A suite of campaign-ready marketing assets featuring a charismatic and visually consistent brand mascot.`;
 };
 
-const generateAssetPromptFromImage = (assetType: string): string => {
+const generateAssetPromptFromImage = (assetType) => {
     return `**CREATIVE DIRECTOR'S BRIEF: PRODUCT-CENTRIC MARKETING VISUAL**
   **PROJECT:** High-Impact Digital Advertisement
   **GOAL:** Create a compelling, professional marketing asset that places a hero product at the center of a brand narrative.
@@ -100,7 +94,7 @@ const generateAssetPromptFromImage = (assetType: string): string => {
   **FINAL DELIVERABLE:** A single, stunning advertisement image. **Output ONLY the generated image.**`;
 };
 
-const generateTextImagePrompt = (text: string, fontStyle: string, placement: string, colorScheme: string): string => {
+const generateTextImagePrompt = (text, fontStyle, placement, colorScheme) => {
     return `**CREATIVE DIRECTOR'S BRIEF: HIGH-FASHION GRAPHIC COMPOSITE**
   **PROJECT:** Magazine Cover / Premium Social Media Graphic
   **GOAL:** Create a visually striking, professional graphic by placing text *behind* the primary subject of an image. The final result should look like a high-end design from a top creative agency.
@@ -119,11 +113,11 @@ const generateTextImagePrompt = (text: string, fontStyle: string, placement: str
   **FINAL DELIVERABLE:** A single, high-resolution JPEG image that is ready for publication. Output ONLY the final image.`;
 };
 
-const generateDiagramPrompt = (topic: string): string => {
+const generateDiagramPrompt = (topic) => {
     return `Create a clean, labeled educational diagram about "${topic}". The visual style must be clear line art with a soft, limited color palette, suitable for a modern science textbook. All labels must be in a clean, legible sans-serif font, placed clearly with pointer lines. Each key part must have a concise explanation. The layout should be uncluttered and professional. If it is a process, use arrows to show flow. The final output must be a single, self-explanatory image.`;
 };
 
-const generateStoryIllustrationPrompt = (characterDescription: string, pageText: string): string => {
+const generateStoryIllustrationPrompt = (characterDescription, pageText) => {
     return `**CREATIVE DIRECTOR'S BRIEF: CHILDREN'S STORYBOOK ILLUSTRATION**
   **PROJECT:** A page for a new, high-quality children's book.
   **GOAL:** Create a single, beautiful, and emotionally resonant illustration. Character consistency is the most important rule.
@@ -142,135 +136,128 @@ const generateStoryIllustrationPrompt = (characterDescription: string, pageText:
   **FINAL DELIVERABLE:** A single, high-resolution, family-friendly illustration.`;
 };
 
+// Main service functions
+const generateProductMockup = async (productImageBuffer, productMimeType, backgroundImageBuffer, backgroundMimeType, backgroundPrompt) => {
+    try {
+        const productBase64 = productImageBuffer.toString('base64');
 
-export const generateProductMockup = async (
-  productImage: ImageFile,
-  backgroundImage: ImageFile | null,
-  backgroundPrompt: string | null
-): Promise<string> => {
-  try {
-    const productBase64 = await fileToBase64(productImage.file);
-    
-    const parts: any[] = [
-      {
-        inlineData: {
-          data: productBase64,
-          mimeType: productImage.file.type,
-        },
-      },
-    ];
+        const parts = [
+            {
+                inlineData: {
+                    data: productBase64,
+                    mimeType: productMimeType,
+                },
+            },
+        ];
 
-    if (backgroundImage) {
-      const backgroundBase64 = await fileToBase64(backgroundImage.file);
-      parts.push({
-        inlineData: {
-          data: backgroundBase64,
-          mimeType: backgroundImage.file.type,
-        },
-      });
-    }
-
-    const prompt = backgroundPrompt
-      ? generatePromptForTextBackground(backgroundPrompt)
-      : generatePromptForImageBackground();
-      
-    parts.push({ text: prompt });
-
-    const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        contents: { parts },
-        config: {
-            responseModalities: [Modality.IMAGE, Modality.TEXT],
-        },
-    });
-    
-    const responseParts = response.candidates?.[0]?.content?.parts;
-    if (!responseParts) {
-        throw new Error("Invalid response from API: No content parts found.");
-    }
-
-    const imagePart = responseParts.find(part => part.inlineData);
-    if (imagePart && imagePart.inlineData) {
-        const base64ImageBytes: string = imagePart.inlineData.data;
-        return `data:${imagePart.inlineData.mimeType};base64,${base64ImageBytes}`;
-    }
-
-    const textResponse = responseParts.find(p => p.text)?.text;
-    if (textResponse) {
-        throw new Error(`API returned text instead of an image: "${textResponse}"`);
-    }
-
-    throw new Error("API did not return an image. It may have refused the request.");
-  } catch (error) {
-    console.error("Error generating mockup:", error);
-    if (error instanceof Error) {
-        if (error.message.includes('SAFETY')) {
-            return Promise.reject('The request was blocked due to safety policies. Please try a different image or prompt.');
+        if (backgroundImageBuffer) {
+            const backgroundBase64 = backgroundImageBuffer.toString('base64');
+            parts.push({
+                inlineData: {
+                    data: backgroundBase64,
+                    mimeType: backgroundMimeType,
+                },
+            });
         }
-        return Promise.reject(error.message);
+
+        const prompt = backgroundPrompt
+            ? generatePromptForTextBackground(backgroundPrompt)
+            : generatePromptForImageBackground();
+
+        parts.push({ text: prompt });
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image-preview',
+            contents: { parts },
+            config: {
+                responseModalities: [Modality.IMAGE, Modality.TEXT],
+            },
+        });
+
+        const responseParts = response.candidates?.[0]?.content?.parts;
+        if (!responseParts) {
+            throw new Error("Invalid response from API: No content parts found.");
+        }
+
+        const imagePart = responseParts.find(part => part.inlineData);
+        if (imagePart && imagePart.inlineData) {
+            const base64ImageBytes = imagePart.inlineData.data;
+            return `data:${imagePart.inlineData.mimeType};base64,${base64ImageBytes}`;
+        }
+
+        const textResponse = responseParts.find(p => p.text)?.text;
+        if (textResponse) {
+            throw new Error(`API returned text instead of an image: "${textResponse}"`);
+        }
+
+        throw new Error("API did not return an image. It may have refused the request.");
+    } catch (error) {
+        console.error("Error generating mockup:", error);
+        if (error instanceof Error) {
+            if (error.message.includes('SAFETY')) {
+                throw new Error('The request was blocked due to safety policies. Please try a different image or prompt.');
+            }
+            throw new Error(error.message);
+        }
+        throw new Error("An unknown error occurred during image generation.");
     }
-    return Promise.reject("An unknown error occurred during image generation.");
-  }
 };
 
-export const generateBrandAsset = async (
-    assetInput: { image?: ImageFile, description?: string },
-    assetType: string
-): Promise<string> => {
+const generateBrandAsset = async (imageBuffer, mimeType, description, assetType) => {
     try {
         // CASE 1: Generate from a text description (Mascot)
-        if (assetInput.description) {
-            const prompt = generateAssetPromptFromText(assetInput.description, assetType);
+        if (description) {
+            const prompt = generateAssetPromptFromText(description, assetType);
             const response = await ai.models.generateImages({
                 model: 'imagen-4.0-generate-001',
                 prompt: prompt,
                 config: {
-                  numberOfImages: 1,
-                  outputMimeType: 'image/png',
-                  aspectRatio: '1:1',
+                    numberOfImages: 1,
+                    outputMimeType: 'image/png',
+                    aspectRatio: '1:1',
                 },
             });
-            
+
             if (!response.generatedImages || response.generatedImages.length === 0) {
-                 throw new Error("API did not return an image for the mascot description.");
+                throw new Error("API did not return an image for the mascot description.");
             }
-            const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
+            const base64ImageBytes = response.generatedImages[0].image.imageBytes;
             return `data:image/png;base64,${base64ImageBytes}`;
         }
         // CASE 2: Generate from a product image
-        else if (assetInput.image) {
-            const productBase64 = await fileToBase64(assetInput.image.file);
+        else if (imageBuffer) {
+            const productBase64 = imageBuffer.toString('base64');
             const prompt = generateAssetPromptFromImage(assetType);
 
             const parts = [
-              {
-                inlineData: {
-                  data: productBase64,
-                  mimeType: assetInput.image.file.type,
+                {
+                    inlineData: {
+                        data: productBase64,
+                        mimeType: mimeType,
+                    },
                 },
-              },
-              { text: prompt }
+                { text: prompt }
             ];
 
-            const response: GenerateContentResponse = await ai.models.generateContent({
+            const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash-image-preview',
                 contents: { parts },
                 config: {
                     responseModalities: [Modality.IMAGE, Modality.TEXT],
                 },
             });
-            
+
             const responseParts = response.candidates?.[0]?.content?.parts;
             if (!responseParts) {
-                 throw new Error("Invalid response from API: No content parts found.");
+                throw new Error("Invalid response from API: No content parts found.");
             }
 
             const imagePart = responseParts.find(part => part.inlineData);
             if (imagePart && imagePart.inlineData) {
-                const base64ImageBytes: string = imagePart.inlineData.data;
+                const base64ImageBytes = imagePart.inlineData.data;
                 return `data:${imagePart.inlineData.mimeType};base64,${base64ImageBytes}`;
             }
-            
+
             const textResponse = responseParts.find(p => p.text)?.text;
             if (textResponse) {
                 throw new Error(`API returned text instead of an image: "${textResponse}"`);
@@ -278,113 +265,105 @@ export const generateBrandAsset = async (
 
             throw new Error("API did not return an image from the product input.");
         }
-        
+
         throw new Error("Invalid input for asset generation.");
 
     } catch (error) {
         console.error("Error generating brand asset:", error);
         if (error instanceof Error) {
             if (error.message.includes('SAFETY')) {
-                return Promise.reject('The request was blocked due to safety policies. Please try a different image or prompt.');
+                throw new Error('The request was blocked due to safety policies. Please try a different image or prompt.');
             }
-            return Promise.reject(error.message);
+            throw new Error(error.message);
         }
-        return Promise.reject("An unknown error occurred during asset generation.");
+        throw new Error("An unknown error occurred during asset generation.");
     }
 };
 
-export const generateTextImage = async (
-  image: ImageFile,
-  text: string,
-  fontStyle: string,
-  placement: string,
-  colorScheme: string
-): Promise<string> => {
-  try {
-    const imageBase64 = await fileToBase64(image.file);
-    const prompt = generateTextImagePrompt(text, fontStyle, placement, colorScheme);
-    
-    const parts = [
-      {
-        inlineData: {
-          data: imageBase64,
-          mimeType: image.file.type,
-        },
-      },
-      { text: prompt }
-    ];
+const generateTextImage = async (imageBuffer, mimeType, text, fontStyle, placement, colorScheme) => {
+    try {
+        const imageBase64 = imageBuffer.toString('base64');
+        const prompt = generateTextImagePrompt(text, fontStyle, placement, colorScheme);
 
-    const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        contents: { parts },
-        config: {
-            responseModalities: [Modality.IMAGE, Modality.TEXT],
-        },
-    });
+        const parts = [
+            {
+                inlineData: {
+                    data: imageBase64,
+                    mimeType: mimeType,
+                },
+            },
+            { text: prompt }
+        ];
 
-    const responseParts = response.candidates?.[0]?.content?.parts;
-    if (!responseParts) {
-        throw new Error("Invalid response from API: No content parts found.");
-    }
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image-preview',
+            contents: { parts },
+            config: {
+                responseModalities: [Modality.IMAGE, Modality.TEXT],
+            },
+        });
 
-    const imagePart = responseParts.find(part => part.inlineData);
-    if (imagePart && imagePart.inlineData) {
-        const base64ImageBytes: string = imagePart.inlineData.data;
-        return `data:${imagePart.inlineData.mimeType};base64,${base64ImageBytes}`;
-    }
-
-    const textResponse = responseParts.find(p => p.text)?.text;
-    if (textResponse) {
-        throw new Error(`API returned text instead of an image: "${textResponse}"`);
-    }
-
-    throw new Error("API did not return an image. It may have refused the request.");
-  } catch (error) {
-    console.error("Error generating text image:", error);
-    if (error instanceof Error) {
-        if (error.message.includes('SAFETY')) {
-            return Promise.reject('The request was blocked due to safety policies. Please try a different image or prompt.');
+        const responseParts = response.candidates?.[0]?.content?.parts;
+        if (!responseParts) {
+            throw new Error("Invalid response from API: No content parts found.");
         }
-        return Promise.reject(error.message);
+
+        const imagePart = responseParts.find(part => part.inlineData);
+        if (imagePart && imagePart.inlineData) {
+            const base64ImageBytes = imagePart.inlineData.data;
+            return `data:${imagePart.inlineData.mimeType};base64,${base64ImageBytes}`;
+        }
+
+        const textResponse = responseParts.find(p => p.text)?.text;
+        if (textResponse) {
+            throw new Error(`API returned text instead of an image: "${textResponse}"`);
+        }
+
+        throw new Error("API did not return an image. It may have refused the request.");
+    } catch (error) {
+        console.error("Error generating text image:", error);
+        if (error instanceof Error) {
+            if (error.message.includes('SAFETY')) {
+                throw new Error('The request was blocked due to safety policies. Please try a different image or prompt.');
+            }
+            throw new Error(error.message);
+        }
+        throw new Error("An unknown error occurred during text image generation.");
     }
-    return Promise.reject("An unknown error occurred during text image generation.");
-  }
 };
 
-export const generateEducationalDiagram = async (topic: string): Promise<string> => {
+const generateEducationalDiagram = async (topic) => {
     try {
         const prompt = generateDiagramPrompt(topic);
         const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
             prompt: prompt,
             config: {
-              numberOfImages: 1,
-              outputMimeType: 'image/png',
-              aspectRatio: '4:3', // Good aspect ratio for diagrams
+                numberOfImages: 1,
+                outputMimeType: 'image/png',
+                aspectRatio: '4:3',
             },
         });
-        
+
         if (!response.generatedImages || response.generatedImages.length === 0) {
-             throw new Error("API did not return an image for the diagram topic.");
+            throw new Error("API did not return an image for the diagram topic.");
         }
-        const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
+        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
         return `data:image/png;base64,${base64ImageBytes}`;
 
     } catch (error) {
         console.error("Error generating educational diagram:", error);
         if (error instanceof Error) {
             if (error.message.includes('SAFETY')) {
-                return Promise.reject('The request was blocked due to safety policies. Please try a different topic.');
+                throw new Error('The request was blocked due to safety policies. Please try a different topic.');
             }
-            return Promise.reject(error.message);
+            throw new Error(error.message);
         }
-        return Promise.reject("An unknown error occurred during diagram generation.");
+        throw new Error("An unknown error occurred during diagram generation.");
     }
 };
 
-
-// --- RECIPE GENERATOR FUNCTIONS ---
-
+// Recipe generation functions
 const RECIPE_SCHEMA = {
     type: Type.OBJECT,
     properties: {
@@ -409,23 +388,21 @@ const RECIPE_SCHEMA = {
     required: ['title', 'estimatedTime', 'ingredients', 'instructions'],
 };
 
-export const getRecipeFromAI = async (
-  input: { dishName?: string, ingredientImage?: ImageFile }
-): Promise<Recipe> => {
+const getRecipeFromAI = async (dishName, ingredientImageBuffer, ingredientMimeType) => {
     let prompt = `You are a creative chef. Generate a delicious recipe. The output must be in the specified JSON format.`;
-    const parts: any[] = [];
+    const parts = [];
 
-    if (input.dishName) {
-        prompt += ` The user wants to make: "${input.dishName}".`;
+    if (dishName) {
+        prompt += ` The user wants to make: "${dishName}".`;
         parts.push({ text: prompt });
-    } else if (input.ingredientImage) {
+    } else if (ingredientImageBuffer) {
         prompt += ` The user has provided an image of their available ingredients. Create a suitable recipe using ONLY the ingredients you can identify in the image. Be realistic.`;
-        const imageBase64 = await fileToBase64(input.ingredientImage.file);
+        const imageBase64 = ingredientImageBuffer.toString('base64');
         parts.push({ text: prompt });
         parts.push({
             inlineData: {
                 data: imageBase64,
-                mimeType: input.ingredientImage.file.type,
+                mimeType: ingredientMimeType,
             },
         });
     } else {
@@ -443,7 +420,7 @@ export const getRecipeFromAI = async (
         });
 
         const jsonStr = response.text.trim();
-        const recipe = JSON.parse(jsonStr) as Recipe;
+        const recipe = JSON.parse(jsonStr);
         // Initialize empty imageUrls
         recipe.instructions = recipe.instructions.map(inst => ({ ...inst, imageUrl: undefined }));
         recipe.finalImageUrl = undefined;
@@ -454,28 +431,28 @@ export const getRecipeFromAI = async (
     }
 };
 
-export const generateRecipeImage = async (prompt: string): Promise<string> => {
+const generateRecipeImage = async (prompt) => {
     try {
         const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
             prompt: prompt,
             config: {
-              numberOfImages: 1,
-              outputMimeType: 'image/png',
-              aspectRatio: '1:1',
+                numberOfImages: 1,
+                outputMimeType: 'image/png',
+                aspectRatio: '1:1',
             },
         });
 
         if (!response.generatedImages || response.generatedImages.length === 0) {
             throw new Error("API did not return an image for the recipe step.");
         }
-        const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
+        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
         return `data:image/png;base64,${base64ImageBytes}`;
     } catch (error) {
         console.error("Error generating recipe image:", error);
         if (error instanceof Error) {
             if (error.message.includes('SAFETY')) {
-                 throw new Error('An image for this step was blocked for safety reasons.');
+                throw new Error('An image for this step was blocked for safety reasons.');
             }
             if (error.message.includes('429') || error.message.toLowerCase().includes('quota')) {
                 throw new Error('API rate limit exceeded. The process was stopped.');
@@ -485,102 +462,44 @@ export const generateRecipeImage = async (prompt: string): Promise<string> => {
     }
 };
 
-
-export const generateFullRecipe = async (
-    input: { dishName?: string, ingredientImage?: ImageFile },
-    onImageGenerated: (step: number | 'final' | 'initial', imageUrl: string | Recipe) => void,
-    onProgressUpdate: (message: string) => void
-) => {
-    // 1. Get the structured recipe text
-    onProgressUpdate('Generating recipe text from AI...');
-    const recipe = await getRecipeFromAI(input);
-    onProgressUpdate('Recipe text received!');
-
-    // This is a special callback to send the text-only recipe to the UI immediately
-    onProgressUpdate('Displaying recipe text...');
-    onImageGenerated('initial', recipe);
-
-
-    // 2. Generate image for each step
-    for (const instruction of recipe.instructions) {
-        onProgressUpdate(`Generating image for step ${instruction.step}: "${instruction.text}"`);
-        const imagePrompt = `**CREATIVE BRIEF: FOOD PHOTOGRAPHY (IN-PROCESS SHOT)**
-**ROLE:** Professional Food Photographer & Stylist
-**MISSION:** Create a single, hyper-realistic, and highly appetizing photograph for a recipe blog.
-**SUBJECT:** The cooking step is: "${instruction.text}".
-**CONTEXT:** This is for a recipe called "${recipe.title}".
-**STYLE GUIDELINES (MANDATORY):**
-- **Composition:** Close-up shot, focus on the action (e.g., chopping, stirring). Use a shallow depth of field (bokeh).
-- **Lighting:** Bright, natural, soft light (like from a large window).
-- **Aesthetics:** Clean, modern, vibrant colors. The food must look delicious and fresh.
-- **Realism:** Absolutely photorealistic. No digital artifacts. It should look like a photo from a high-end food magazine like Bon Appétit.
-**OUTPUT:** A single, stunning food photograph.`;
-        try {
-            const imageUrl = await generateRecipeImage(imagePrompt);
-            onImageGenerated(instruction.step, imageUrl);
-        } catch (e) {
-             console.error(`Could not generate image for step ${instruction.step}`, e);
-             throw e;
-        }
-        
-        onProgressUpdate(`Pausing to respect API limits...`);
-        await delay(15000); // 15-second delay
-    }
-    
-    // 3. Generate final hero image
-    onProgressUpdate(`Generating final hero shot for "${recipe.title}"...`);
-    const finalImagePrompt = `**CREATIVE BRIEF: FOOD PHOTOGRAPHY (HERO SHOT)**
-**ROLE:** Professional Food Photographer & Stylist
-**MISSION:** Create the final "hero shot" of a finished dish for a magazine cover.
-**SUBJECT:** A beautifully plated, delicious-looking serving of "${recipe.title}".
-**STYLE GUIDELELINES (MANDATORY):**
-- **Plating:** Elegant and clean. The food is the star. Use professional plating techniques.
-- **Lighting:** Dramatic but natural lighting that highlights textures, steam, and colors.
-- **Background:** A complementary, slightly out-of-focus background (e.g., a nice tabletop, linen napkin, relevant fresh ingredients).
-- **Aesthetics:** Appetizing, vibrant, and utterly mouth-watering.
-- **Realism:** Hyper-realistic. It must look like a real, professionally shot photograph.
-**OUTPUT:** A single, stunning hero shot of the final dish.`;
-    try {
-        const finalImageUrl = await generateRecipeImage(finalImagePrompt);
-        onImageGenerated('final', finalImageUrl);
-    } catch (e) {
-        console.error(`Could not generate final hero image`, e);
-        throw e;
-    }
-
-    onProgressUpdate('Recipe complete!');
-    return recipe;
-};
-
-// --- STORYBOOK CREATOR FUNCTIONS ---
-
-export const generateStoryIllustration = async (characterDescription: string, pageText: string): Promise<string> => {
+const generateStoryIllustration = async (characterDescription, pageText) => {
     try {
         const prompt = generateStoryIllustrationPrompt(characterDescription, pageText);
         const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
             prompt: prompt,
             config: {
-              numberOfImages: 1,
-              outputMimeType: 'image/png',
-              aspectRatio: '4:3',
+                numberOfImages: 1,
+                outputMimeType: 'image/png',
+                aspectRatio: '4:3',
             },
         });
-        
+
         if (!response.generatedImages || response.generatedImages.length === 0) {
-             throw new Error("API did not return an illustration for this page.");
+            throw new Error("API did not return an illustration for this page.");
         }
-        const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
+        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
         return `data:image/png;base64,${base64ImageBytes}`;
 
     } catch (error) {
         console.error("Error generating story illustration:", error);
         if (error instanceof Error) {
             if (error.message.includes('SAFETY')) {
-                return Promise.reject('The illustration was blocked due to safety policies. Please revise the character or page description.');
+                throw new Error('The illustration was blocked due to safety policies. Please revise the character or page description.');
             }
-            return Promise.reject(error.message);
+            throw new Error(error.message);
         }
-        return Promise.reject("An unknown error occurred during illustration generation.");
+        throw new Error("An unknown error occurred during illustration generation.");
     }
+};
+
+module.exports = {
+    generateProductMockup,
+    generateBrandAsset,
+    generateTextImage,
+    generateEducationalDiagram,
+    getRecipeFromAI,
+    generateRecipeImage,
+    generateStoryIllustration,
+    delay
 };

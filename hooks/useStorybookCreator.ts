@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { generateStoryIllustration } from '../services/geminiService';
+import { apiService } from '../services/apiService';
 import { StoryPage } from '../types';
 
 export const useStorybookCreator = () => {
@@ -51,11 +51,11 @@ export const useStorybookCreator = () => {
         setPages(updatedPages);
 
         try {
-            const imageDataUrl = await generateStoryIllustration(
+            const response = await apiService.generateStoryIllustration(
                 characterDescription,
                 page.text
             );
-            updatedPages = updatedPages.map(p => p.id === page.id ? { ...p, imageUrl: imageDataUrl, isLoading: false } : p);
+            updatedPages = updatedPages.map(p => p.id === page.id ? { ...p, imageUrl: response.imageDataUrl, isLoading: false } : p);
             setPages(updatedPages);
         } catch (err: any) {
             setError(`Failed on page ${i + 1}: ${err.toString()}`);

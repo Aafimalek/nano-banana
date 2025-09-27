@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { ImageFile } from '../types';
-import { CloseIcon, UploadIcon } from './icons';
+import { FaTimes, FaUpload } from "react-icons/fa";
 
 interface ImageUploaderProps {
   onImageUpload: (file: ImageFile | null) => void;
@@ -36,7 +36,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, ima
   return (
     <div
       onClick={handleContainerClick}
-      className="relative w-full h-48 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg flex items-center justify-center text-center cursor-pointer hover:border-teal-500 dark:hover:border-teal-500/70 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-300"
+      className="relative w-full h-48 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center text-center cursor-pointer hover:border-white hover:bg-gray-800/50 transition-all duration-300"
     >
       <input
         type="file"
@@ -54,15 +54,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, ima
           />
           <button
             onClick={handleClear}
-            className="absolute top-2 right-2 bg-zinc-900 bg-opacity-60 text-white rounded-full p-1.5 hover:bg-opacity-80 transition-colors"
+            className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 hover:bg-opacity-80 transition-colors"
             aria-label="Remove image"
           >
-            <CloseIcon className="w-4 h-4" />
+            <FaTimes className="w-4 h-4" />
           </button>
         </>
       ) : (
-        <div className="text-zinc-500 dark:text-zinc-400 flex flex-col items-center">
-          <UploadIcon className="w-8 h-8 mb-2" />
+        <div className="text-gray-400 flex flex-col items-center">
+          <FaUpload className="w-8 h-8 mb-2" />
           <span className="font-semibold">Click to upload {label}</span>
           <span className="text-xs">PNG, JPG, WEBP</span>
         </div>

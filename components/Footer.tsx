@@ -1,68 +1,74 @@
-import React from 'react';
-import { LogoIcon, TwitterIcon, GithubIcon } from './icons';
+import React from 'react'
+import { Link } from 'react-router-dom';
 import { ToolId } from '../types';
-
-interface FooterProps {
-    onToolClick: (toolId: ToolId) => void;
-}
+import { FaLinkedin, FaGithub, FaReddit, FaYoutube, FaGlobe, FaShieldAlt } from "react-icons/fa";
 
 const toolData: { id: ToolId; label: string }[] = [
-    { id: 'mockup', label: 'Mockup Images' },
-    { id: 'asset', label: 'Brand Marketing Images' },
-    { id: 'recipe', label: 'Recipe Images' },
     { id: 'textImage', label: 'Text Behind Images' },
+    { id: 'isometry', label: 'Isometry' },
+    { id: 'outfitReplace', label: 'Replace Outfit' },
     { id: 'diagram', label: 'Diagrams' },
-    { id: 'storybook', label: 'Storybook Images' },
 ];
 
-export const Footer: React.FC<FooterProps> = ({ onToolClick }) => {
+export const Footer: React.FC = () => {
     const year = new Date().getFullYear();
 
     return (
-        <footer className="bg-zinc-100 dark:bg-zinc-950/50 border-t border-zinc-200 dark:border-zinc-800/50">
-            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div className="md:col-span-2 space-y-4">
-                        <div className="flex items-center space-x-3">
-                            <LogoIcon className="w-8 h-8 text-teal-500" />
-                            <span className="text-2xl font-bold text-zinc-900 dark:text-white">AI Creative Suite</span>
+        <footer className="bg-[#1a1a1a] border-t-2 border-[#a1a1a1]/20">
+            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div className="max-w-6xl mx-auto">
+                    {/* Main Footer Content */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                        {/* Contact & Social */}
+                        <div className="space-y-4">
+                            <div className="space-y-3">
+                                <p className="text-[#ededed] text-lg hover:underline">morphic.com</p>
+                                <div className="flex space-x-4">
+                                    <FaLinkedin size={25} color="#a1a1a1" />
+                                    <FaGithub size={25} color="#a1a1a1" />
+                                    <FaYoutube size={25} color="#a1a1a1" />
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-base text-zinc-500 dark:text-zinc-400 max-w-xs">
-                            Your all-in-one suite for stunning, AI-powered brand visuals, content, and creative assets.
-                        </p>
-                    </div>
-                    <div>
-                        <h3 className="text-base font-semibold text-zinc-900 dark:text-white tracking-wider uppercase">Tools</h3>
-                        <ul className="mt-4 space-y-3">
-                            {toolData.map(tool => (
-                                <li key={tool.id}>
-                                    <button onClick={() => onToolClick(tool.id)} className="text-left text-base text-zinc-500 dark:text-zinc-400 hover:text-teal-500 transition-colors">
-                                        {tool.label}
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 className="text-base font-semibold text-zinc-900 dark:text-white tracking-wider uppercase">Connect</h3>
-                        <ul className="mt-4 space-y-3">
-                            <li>
-                                <a href="https://x.com/aafimalek2032" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-base text-zinc-500 dark:text-zinc-400 hover:text-teal-500 transition-colors">
-                                    <TwitterIcon className="w-6 h-6"/> <span>Twitter</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="https://github.com/Aafimalek/nano-banana" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-base text-zinc-500 dark:text-zinc-400 hover:text-teal-500 transition-colors">
-                                    <GithubIcon className="w-6 h-6"/> <span>GitHub</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
 
-                <div className="mt-12 pt-8 border-t border-zinc-200 dark:border-zinc-800 text-center text-base text-zinc-500 dark:text-zinc-400 space-y-2">
-                    <p>&copy; {year} AI Creative Suite. All rights reserved.</p>
-                    <p>Made with ❤️ by Aafi</p>
+                        {/* Product */}
+                        <div>
+                            <h3 className="text-[#ededed] font-semibold text-sm mb-4">Product</h3>
+                            <ul className="space-y-2">
+                                <li><Link to="/" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">Home</Link></li>
+                                <li><Link to="/pricing" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">Pricing</Link></li>
+                                <li><Link to="/tools" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">Tools</Link></li>
+                                <li><Link to="/about" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">About</Link></li>
+                                <li><Link to="/contact" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">Contact</Link></li>
+                            </ul>
+                        </div>
+
+                        {/* Company */}
+                        <div>
+                            <h3 className="text-[#ededed] font-semibold text-sm mb-4">Company</h3>
+                            <ul className="space-y-2">
+                                <li><Link to="/about" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">About</Link></li>
+                                <li><Link to="/contact" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">Contact</Link></li>
+                            </ul>
+                        </div>
+
+                        {/* Legal */}
+                        <div>
+                            <h3 className="text-[#ededed] font-semibold text-sm mb-4">Legal</h3>
+                            <ul className="space-y-2">
+                                <li><Link to="/terms" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">Terms</Link></li>
+                                <li><Link to="/privacy" className="text-[#a1a1a1] hover:text-[#ededed] text-sm transition-colors hover:underline">Privacy</Link></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {/* Bottom Section */}
+                    <div className="flex flex-col md:flex-row justify-center items-start md:items-center space-y-4 md:space-y-0">
+                        {/* Copyright */}
+                        <div className="text-[#a1a1a1] text-sm">
+                            © {year} Made by Morphic
+                        </div>
+                    </div>
                 </div>
             </div>
         </footer>

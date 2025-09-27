@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { generateBrandAsset } from '../services/geminiService';
+import { apiService } from '../services/apiService';
 import { GeneratedMockup, ImageFile } from '../types';
 
 export const useAssetGenerator = () => {
@@ -34,10 +34,11 @@ export const useAssetGenerator = () => {
         const assetType = assetTypes[i];
         setProgress({ current: i + 1, total: assetTypes.length, currentAsset: assetType });
         
-        const imageDataUrl = await generateBrandAsset(
-          { image: assetInput.image ?? undefined, description: assetInput.description },
-          assetType
+        const response = await apiService.generateBrandAsset(
+          assetInput.image?.file,
+          { description: assetInput.description, assetType }
         );
+        const imageDataUrl = response.imageDataUrl;
 
         generated.push({ imageDataUrl, description: assetType });
         setResults([...generated]); // Update results in real-time

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { generateEducationalDiagram } from '../services/geminiService';
+import { apiService } from '../services/apiService';
 import { DiagramResult } from '../types';
 
 export const useDiagramGenerator = () => {
@@ -19,8 +19,8 @@ export const useDiagramGenerator = () => {
     setError(null);
 
     try {
-      const imageDataUrl = await generateEducationalDiagram(topic);
-      setResult({ imageDataUrl });
+      const response = await apiService.generateDiagram({ topic });
+      setResult({ imageDataUrl: response.imageDataUrl });
     } catch (err: any) {
       setError(err.toString());
     } finally {

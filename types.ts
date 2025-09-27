@@ -1,5 +1,5 @@
 
-export type ToolId = 'mockup' | 'asset' | 'recipe' | 'textImage' | 'diagram' | 'storybook';
+export type ToolId = 'textImage' | 'diagram' | 'isometry' | 'outfitReplace';
 
 export interface GeneratedMockup {
   imageDataUrl: string;

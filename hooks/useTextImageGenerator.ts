@@ -1,17 +1,28 @@
 import { useState, useCallback } from 'react';
-import { generateTextImage } from '../services/geminiService';
+import { apiService } from '../services/apiService';
 import { ImageFile, TextImageResult } from '../types';
 
 export const useTextImageGenerator = () => {
   const [image, setImage] = useState<ImageFile | null>(null);
   const [text, setText] = useState<string>('');
   const [fontStyle, setFontStyle] = useState<string>('Bold Sans-Serif');
-  const [placement, setPlacement] = useState<string>('Centered');
-  const [colorScheme, setColorScheme] = useState<string>('High-Contrast White');
+  const [textPosition, setTextPosition] = useState<string>('Centered');
+  const [colorR, setColorR] = useState<number>(255);
+  const [colorG, setColorG] = useState<number>(255);
+  const [colorB, setColorB] = useState<number>(255);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<TextImageResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleImageUpload = useCallback((file: File | null) => {
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setImage({ file, previewUrl });
+    } else {
+      setImage(null);
+    }
+  }, []);
 
   const generate = useCallback(async () => {
     if (!image) {
@@ -28,32 +39,35 @@ export const useTextImageGenerator = () => {
     setError(null);
 
     try {
-      const imageDataUrl = await generateTextImage(
-        image,
+      const response = await apiService.generateTextImage(image.file, {
         text,
         fontStyle,
-        placement,
-        colorScheme
-      );
-      setResult({ imageDataUrl });
+        placement: textPosition,
+        colorScheme: `rgb(${colorR},${colorG},${colorB})`
+      });
+      setResult({ imageDataUrl: response.imageDataUrl });
     } catch (err: any) {
       setError(err.toString());
     } finally {
       setIsLoading(false);
     }
-  }, [image, text, fontStyle, placement, colorScheme]);
+  }, [image, text, fontStyle, textPosition, colorR, colorG, colorB]);
 
   return {
     image,
-    setImage,
+    setImage: handleImageUpload,
     text,
     setText,
     fontStyle,
     setFontStyle,
-    placement,
-    setPlacement,
-    colorScheme,
-    setColorScheme,
+    textPosition,
+    setTextPosition,
+    colorR,
+    setColorR,
+    colorG,
+    setColorG,
+    colorB,
+    setColorB,
     isLoading,
     result,
     error,

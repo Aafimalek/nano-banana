@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { generateProductMockup } from '../services/geminiService';
+import { apiService } from '../services/apiService';
 import { GeneratedMockup, ImageFile } from '../types';
 
 export const useMockupGenerator = () => {
@@ -31,13 +31,13 @@ export const useMockupGenerator = () => {
       const activeBackgroundImage = prompt ? null : backgroundImage;
       const activeBackgroundPrompt = prompt ? prompt : null;
       
-      const imageDataUrl = await generateProductMockup(
-        productImage,
-        activeBackgroundImage,
-        activeBackgroundPrompt
+      const response = await apiService.generateMockup(
+        productImage.file,
+        activeBackgroundImage?.file,
+        { backgroundPrompt: activeBackgroundPrompt }
       );
       
-      setResult({ imageDataUrl });
+      setResult({ imageDataUrl: response.imageDataUrl });
     } catch (err: any) {
       setError(err.toString());
     } finally {

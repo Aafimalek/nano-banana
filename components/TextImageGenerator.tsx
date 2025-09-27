@@ -2,14 +2,16 @@ import React from 'react';
 import { ImageUploader } from './ImageUploader';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ResultDisplay } from './ResultDisplay';
+import { DragDropImageUploader } from './DragDropImageUploader';
+import { ColorPicker } from './ColorPicker';
 import { useTextImageGenerator } from '../hooks/useTextImageGenerator';
-import { SparklesIcon, TextImageIcon, WriteIcon } from './icons';
+import { FaTextWidth, FaPen, FaProjectDiagram } from 'react-icons/fa';
 
 const FONT_STYLES = [
-    "Bold Sans-Serif", 
-    "Elegant Serif", 
-    "Modern Graffiti", 
-    "Handwritten Script", 
+    "Bold Sans-Serif",
+    "Elegant Serif",
+    "Modern Graffiti",
+    "Handwritten Script",
     "Outline",
     "Vintage Typewriter",
     "Elegant Calligraphy",
@@ -17,32 +19,21 @@ const FONT_STYLES = [
     "Horror Drip"
 ];
 
-const PLACEMENTS = [
-    "Centered", 
-    "Diagonal Top-Left", 
-    "Vertical Left", 
-    "Wrapped Around Subject",
-    "Bottom Centered"
+const POSITIONS = [
+    "Centered",
+    "Top Left",
+    "Top Right",
+    "Bottom Left",
+    "Bottom Right"
 ];
 
-const COLOR_SCHEMES = [
-    "High-Contrast White", 
-    "Monochrome Black", 
-    "Vibrant Gradient", 
-    "Subtle Shadow",
-    "Gold Foil",
-    "Neon Glow (Pink)",
-    "Pastel Dream",
-    "Rainbow Gradient"
-];
-
-const CustomSelect: React.FC<{label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: string[]}> = ({ label, value, onChange, options}) => (
+const CustomSelect: React.FC<{ label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: string[] }> = ({ label, value, onChange, options }) => (
     <div>
-        <label className="block text-base font-medium text-zinc-500 dark:text-zinc-400 mb-2">{label}</label>
+        <label className="block text-base font-medium text-[#ededed] mb-2">{label}</label>
         <select
             value={value}
             onChange={onChange}
-            className="w-full p-4 text-base border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-200 bg-white dark:bg-zinc-800"
+            className="w-full p-4 text-base border border-[#a1a1a1] rounded-lg focus:ring-2 focus:ring-[#3758c9] focus:border-[#3758c9] transition duration-200 bg-[#1a1a1a] text-[#ededed]"
         >
             {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
         </select>
@@ -55,91 +46,102 @@ export const TextImageGenerator: React.FC = () => {
         image, setImage,
         text, setText,
         fontStyle, setFontStyle,
-        placement, setPlacement,
-        colorScheme, setColorScheme,
+        textPosition, setTextPosition,
+        colorR, setColorR,
+        colorG, setColorG,
+        colorB, setColorB,
         isLoading, result, error, generate
     } = useTextImageGenerator();
 
     const isGenerateDisabled = isLoading || !image || !text;
 
+    const handleColorChange = (color: { r: number, g: number, b: number }) => {
+        setColorR(color.r);
+        setColorG(color.g);
+        setColorB(color.b);
+    };
+
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            {/* Input Section */}
-            <div className="lg:col-span-2 space-y-8">
-                <div className="space-y-3">
-                    <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center">
-                        <TextImageIcon className="w-7 h-7 mr-3 text-teal-500" />
-                        Step 1: Upload Image
-                    </h2>
-                    <p className="text-base text-zinc-500 dark:text-zinc-400">Choose an image with a clear foreground subject.</p>
-                </div>
-                <ImageUploader onImageUpload={setImage} image={image} label="Subject Image" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-full">
+            {/* Left: Original Image Uploader */}
+            <div className="lg:col-span-4 space-y-4">
+                <DragDropImageUploader
+                    onImageUpload={setImage}
+                    image={image}
+                    label="Original Image"
+                />
+            </div>
 
-                <div className="space-y-3">
-                    <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center">
-                        <WriteIcon className="w-7 h-7 mr-3 text-teal-500" />
-                        Step 2: Add & Style Text
+            {/* Middle: Controls */}
+            <div className="lg:col-span-4 space-y-6">
+                <div className="space-y-2">
+                    <h2 className="text-lg font-bold text-[#ededed] flex items-center">
+                        <FaPen size={20} color="#ededed" />
+                        <span className="ml-2">Text & Style</span>
                     </h2>
-                    <p className="text-base text-zinc-500 dark:text-zinc-400">Enter your text and choose how you want it to look.</p>
-                </div>
-
-                <div className="relative">
                     <input
                         type="text"
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        placeholder="e.g., DREAM BIG, CREATIVE"
-                        className="w-full p-4 text-base border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-200 bg-white dark:bg-zinc-800"
+                        placeholder="Enter text"
+                        className="w-full p-3 text-base border border-[#a1a1a1] rounded-lg focus:ring-2 focus:ring-[#3758c9] focus:border-[#3758c9] bg-[#1a1a1a] text-[#ededed]"
                     />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 gap-4">
                     <CustomSelect label="Font Style" value={fontStyle} onChange={(e) => setFontStyle(e.target.value)} options={FONT_STYLES} />
-                    <CustomSelect label="Placement" value={placement} onChange={(e) => setPlacement(e.target.value)} options={PLACEMENTS} />
-                    <CustomSelect label="Color Scheme" value={colorScheme} onChange={(e) => setColorScheme(e.target.value)} options={COLOR_SCHEMES} />
+                    <CustomSelect label="Text Position" value={textPosition} onChange={(e) => setTextPosition(e.target.value)} options={POSITIONS} />
                 </div>
-                
+
+                <div className="relative">
+                    <ColorPicker
+                        color={{ r: colorR, g: colorG, b: colorB }}
+                        onChange={handleColorChange}
+                        label="Text Color"
+                    />
+                </div>
+
                 <button
                     onClick={generate}
                     disabled={isGenerateDisabled}
-                    className="w-full flex items-center justify-center bg-teal-500 text-white font-bold py-4 px-4 text-lg rounded-lg hover:bg-teal-600 disabled:bg-zinc-400 dark:disabled:bg-zinc-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg shadow-teal-500/30 disabled:shadow-none disabled:transform-none"
+                    className="w-full flex items-center justify-center bg-white text-black font-bold py-3 px-4 text-base rounded-lg hover:bg-gray-200 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300"
                 >
                     {isLoading ? (
                         <>
-                            <LoadingSpinner className="w-6 h-6 mr-3" />
+                            <LoadingSpinner className="w-5 h-5 mr-3" />
                             Generating...
                         </>
                     ) : (
                         <>
-                            <SparklesIcon className="w-6 h-6 mr-3" />
-                            Generate Image
+                            <FaProjectDiagram size={20} color="white" />
+                            <span className="ml-3">Generate</span>
                         </>
                     )}
                 </button>
             </div>
 
-            {/* Output Section */}
-            <div className="lg:col-span-3 bg-zinc-100 dark:bg-zinc-950 p-4 sm:p-6 rounded-2xl shadow-inner border border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center min-h-[500px] lg:min-h-full">
+            {/* Right: Result */}
+            <div className="lg:col-span-4 bg-[#1a1a1a] p-4 sm:p-6 rounded-2xl shadow-inner border border-white flex flex-col items-center justify-center min-h-[500px]">
                 {isLoading ? (
                     <div className="text-center space-y-4">
-                        <LoadingSpinner className="w-16 h-16 text-teal-500 mx-auto" />
-                        <p className="font-semibold text-xl text-zinc-900 dark:text-white">AI is creating your graphic...</p>
-                        <p className="text-base text-zinc-500 dark:text-zinc-400">This can take a moment. Please wait.</p>
+                        <LoadingSpinner className="w-16 h-16 text-white mx-auto" />
+                        <p className="font-semibold text-xl text-white">AI is creating your graphic...</p>
+                        <p className="text-base text-white">This can take a moment. Please wait.</p>
                     </div>
                 ) : error ? (
-                    <div className="text-center text-red-500 bg-red-100 dark:bg-red-900/20 p-6 rounded-lg">
+                    <div className="text-center text-white bg-black border border-white p-6 rounded-lg">
                         <h3 className="font-bold text-lg">Generation Failed</h3>
                         <p className="text-base mt-2">{error}</p>
                     </div>
                 ) : result ? (
                     <ResultDisplay result={{ imageDataUrl: result.imageDataUrl, description: "Text behind image graphic" }} />
                 ) : (
-                    <div className="text-center text-zinc-500 dark:text-zinc-400 p-4 max-w-sm mx-auto">
-                         <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <TextImageIcon className="w-16 h-16 text-zinc-400 dark:text-zinc-500"/>
+                    <div className="text-center text-white p-4 max-w-sm mx-auto">
+                        <div className="border-2 border-dashed border-white w-32 h-32 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <FaTextWidth size={64} color="white" />
                         </div>
-                        <h3 className="text-2xl font-semibold text-zinc-800 dark:text-white">Your image will appear here</h3>
-                        <p className="text-base mt-2">Upload an image and add text to create your masterpiece!</p>
+                        <h3 className="text-2xl font-semibold text-white">Result will appear here</h3>
+                        <p className="text-base mt-2">Upload an image and set text, position and color.</p>
                     </div>
                 )}
             </div>

@@ -1,12 +1,12 @@
 import React from 'react';
-import { MockupIcon, MascotIcon, RecipeIcon, TextImageIcon, DiagramIcon, StorybookIcon } from './icons';
-import { MockupGenerator } from './MockupGenerator';
-import { AssetGenerator } from './AssetGenerator';
-import { RecipeGenerator } from './RecipeGenerator';
-import { TextImageGenerator } from './TextImageGenerator';
-import { DiagramGenerator } from './DiagramGenerator';
-import { StorybookCreator } from './StorybookCreator';
+import { useNavigate } from 'react-router-dom';
+import { FaTshirt, FaProjectDiagram, FaExternalLinkAlt } from "react-icons/fa";
+import { BsBoxArrowUpRight } from "react-icons/bs";
+import { MdOutlineTextFields } from "react-icons/md";
+import { LuRotate3D } from "react-icons/lu"
 import { ToolId } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { AuthApi } from '../api';
 
 interface Tool {
     id: ToolId;
@@ -16,12 +16,10 @@ interface Tool {
 }
 
 const toolsData: Tool[] = [
-    { id: 'mockup', label: 'Mockup Images', Icon: MockupIcon, description: 'Generate professional, photorealistic mockup images for your products in any scene you can imagine. Perfect for e-commerce and advertising.' },
-    { id: 'asset', label: 'Brand Marketing Images', Icon: MascotIcon, description: 'Create a suite of consistent, on-brand marketing images featuring your product or mascot for social media, ads, and websites.' },
-    { id: 'recipe', label: 'Recipe Images', Icon: RecipeIcon, description: 'Turn any dish name or list of ingredients into a complete, beautifully illustrated step-by-step recipe with images for each stage.' },
-    { id: 'textImage', label: 'Text Behind Images', Icon: TextImageIcon, description: 'Design striking graphics by seamlessly placing stylish text behind the main subject of any photo, creating a high-end, layered effect.' },
-    { id: 'diagram', label: 'Diagrams', Icon: DiagramIcon, description: 'Instantly generate clean, clear, and labeled educational diagrams on any topic, from complex scientific concepts to simple process flows.' },
-    { id: 'storybook', label: 'Storybook Images', Icon: StorybookIcon, description: 'Bring your stories to life by creating a series of charming, consistent illustrations for your children\'s book based on a character description.' },
+    { id: 'textImage', label: 'Text Behind Image', Icon: MdOutlineTextFields, description: 'Design striking graphics by seamlessly placing stylish text behind the main subject of any photo, creating a high-end, layered effect.' },
+    { id: 'diagram', label: 'Diagram', Icon: FaProjectDiagram, description: 'Instantly generate clean, clear, and labeled educational diagrams on any topic, from complex scientific concepts to simple process flows.' },
+    { id: 'isometry', label: 'Isometry', Icon: LuRotate3D, description: 'Create stunning isometric illustrations and 3D-style graphics for presentations, websites, and marketing materials.' },
+    { id: 'outfitReplace', label: 'Replace Outfit', Icon: FaTshirt, description: 'Transform any outfit in photos with AI-powered clothing replacement technology for fashion and lifestyle applications.' },
 ];
 
 interface ToolSuiteProps {
@@ -30,73 +28,80 @@ interface ToolSuiteProps {
 }
 
 export const ToolSuite: React.FC<ToolSuiteProps> = ({ activeTool, setActiveTool }) => {
-    
-    const renderActiveTool = () => {
-        switch (activeTool) {
-            case 'mockup': return <MockupGenerator />;
-            case 'asset': return <AssetGenerator />;
-            case 'recipe': return <RecipeGenerator />;
-            case 'textImage': return <TextImageGenerator />;
-            case 'diagram': return <DiagramGenerator />;
-            case 'storybook': return <StorybookCreator />;
-            default: return null;
+    const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
+
+    const handleLoginClick = () => {
+        if (isAuthenticated) {
+            navigate('/chat');
+        } else {
+            AuthApi.initiateGoogleAuth();
         }
-    }
+    };
 
     return (
         <div className="w-full" id="tool-suite">
-            <header className="text-center mb-12 animate-fade-in">
-                <h2 className="text-4xl sm:text-5xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+            <header className="text-center mb-12 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-white bg-[length:200%_auto] animate-text-gradient-anim">
                     The Creator's Toolkit
                 </h2>
-                <p className="mt-4 text-xl text-zinc-500 dark:text-zinc-400 max-w-3xl mx-auto">
-                    Select a tool from the sidebar to begin your creative journey.
+                <p className="mt-4 text-xl text-gray-400 max-w-3xl mx-auto">
+                    Discover our powerful AI tools.
                 </p>
             </header>
-    
-            <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8 animate-slide-up">
-                {/* Sidebar Navigation */}
-                <aside className="hidden lg:block">
-                    <nav className="space-y-3">
-                        {toolsData.map(tool => (
-                            <button
-                                key={tool.id}
-                                onClick={() => setActiveTool(tool.id)}
-                                className={`w-full flex items-start text-left p-4 rounded-xl transition-colors duration-200 ${
-                                    activeTool === tool.id
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                                    : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50'
-                                }`}
-                            >
-                                <tool.Icon className={`w-7 h-7 mr-4 mt-1 flex-shrink-0 ${activeTool === tool.id ? 'text-white' : 'text-teal-500'}`} />
-                                <div>
-                                    <h3 className="font-bold text-base">{tool.label}</h3>
-                                    <p className={`text-sm mt-1 ${activeTool === tool.id ? 'text-indigo-200' : 'text-zinc-500 dark:text-zinc-400'}`}>
-                                        {tool.description}
-                                    </p>
-                                </div>
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
-                
-                {/* Main Content Area */}
-                <div className="bg-white dark:bg-zinc-900/70 rounded-2xl shadow-2xl shadow-zinc-200/50 dark:shadow-black/50 border border-zinc-200 dark:border-zinc-800">
-                    {/* Mobile Dropdown */}
-                    <div className="lg:hidden p-4 bg-zinc-100/50 dark:bg-zinc-950/50 rounded-t-2xl border-b border-zinc-200 dark:border-zinc-800">
-                        <select
-                            value={activeTool}
-                            onChange={(e) => setActiveTool(e.target.value as ToolId)}
-                            className="w-full p-4 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-200 bg-white dark:bg-zinc-800 font-bold text-base"
-                        >
-                            {toolsData.map(tool => <option key={tool.id} value={tool.id}>{tool.label}</option>)}
-                        </select>
-                    </div>
 
-                    <div className="p-6 sm:p-8">
-                        {renderActiveTool()}
+            <div className="space-y-16">
+                {toolsData.map((tool, index) => (
+                    <div key={tool.id} className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12 animate-slide-up`}>
+                        {/* Tool Info */}
+                        <div className="flex-1 space-y-6">
+                            <div className="flex items-center gap-4">
+                                <span className="relative">
+                                    <span className="absolute -inset-2 rounded-xl blur-md opacity-60 bg-white/40"></span>
+                                    <tool.Icon className="relative w-12 h-12 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                                </span>
+                                <h3 className="text-3xl font-bold text-white">{tool.label}</h3>
+                            </div>
+                            <p className="text-lg text-gray-300 leading-relaxed">
+                                {tool.description}
+                            </p>
+                            {/* <div className="space-y-3">
+                                <div className="flex items-center gap-2 text-sm text-gray-400">
+                                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                    <span>Requires login to access</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-400">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    <span>AI-powered generation</span>
+                                </div>
+                            </div> */}
+                            <button
+                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                                onClick={handleLoginClick}
+                            >
+                                {isAuthenticated ? 'Go to Chat' : 'Try Now'} <FaExternalLinkAlt size={15} />
+                            </button>
+                        </div>
+
+                        {/* Video Placeholder */}
+                        <div className="flex-1 relative">
+                            <div className="relative rounded-2xl overflow-hidden bg-gray-900/50 border border-gray-700 backdrop-blur-xl">
+                                <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                                    <div className="text-center space-y-4">
+                                        <div className="w-16 h-16 mx-auto bg-gray-700 rounded-full flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M8 5v10l8-5-8-5z" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-gray-400 text-sm">Usage Video</p>
+                                        <p className="text-gray-500 text-xs">Login to view</p>
+                                    </div>
+                                </div>
+                                <div className="absolute inset-0 bg-black/20"></div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                ))}
             </div>
         </div>
     );
